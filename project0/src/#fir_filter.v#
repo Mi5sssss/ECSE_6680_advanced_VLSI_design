@@ -1,0 +1,25 @@
+module fir_filter (
+    input wire clk,                  // Clock signal
+    input wire rst,                  // Reset signal
+    input wire signed [15:0] data_in, // 16-bit input data
+    output reg signed [31:0] data_out // 32-bit output data (may need more bits due to accumulation)
+);
+
+// Assuming you have already calculated and quantized your coefficients
+localparam signed [15:0] COEFFICIENTS[99:0] = '{/* coefficients go here */};
+
+// Tap delay line
+reg signed [15:0] shift_reg[99:0];
+
+// Multiplied values for each tap
+wire signed [31:0] mults[99:0];
+
+// Perform multiplication of input samples by coefficients
+genvar i;
+generate
+    for (i = 0; i < 100; i = i + 1) begin: tap_multiply
+        assign mults[i] = shift_reg[i] * COEFFICIENTS[i];
+    end
+endgenerate
+
+// Accumulate the results of the multiplication

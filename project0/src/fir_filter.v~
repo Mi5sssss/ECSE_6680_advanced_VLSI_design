@@ -1,0 +1,56 @@
+module fir_filter #(
+    parameter INTEGER_BIT_WIDTH = 16, // Define the integer bit width
+    parameter DECIMAL_BIT_WIDTH = 16, // Define the decimal bit width
+    parameter COEFFICIENTS_WIDTH = 100 // Number of coefficients
+)(
+    input wire clk, // Clock signal
+    input wire rst, // Reset signal
+    input wire signed [INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] data_in, // Input data
+    output reg signed [INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] data_out // Output data
+);
+
+// Coefficient array - Replace with actual quantized coefficients from MATLAB
+localparam signed [INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] COEFFICIENTS[COEFFICIENTS_WIDTH-1:0] = '{ /* ... */ };
+
+// Internal signal declarations
+reg signed [INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] shift_reg[COEFFICIENTS_WIDTH-1:0];
+wire signed [2*INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] mults[COEFFICIENTS_WIDTH-1:0];
+reg signed [2*INTEGER_BIT_WIDTH+2*DECIMAL_BIT_WIDTH-2:0] accumulator;
+
+// Pipelined stages for multiplication results
+reg signed [2*INTEGER_BIT_WIDTH+DECIMAL_BIT_WIDTH-1:0] pipeline[COEFFICIENTS_WIDTH-1:0];
+
+// FIR filter tap multiplication
+integer i;
+always @(posedge clk) begin
+    if (rst) begin
+        for (i = 0; i < COEFFICIENTS_WIDTH; i = i + 1) begin
+            shift_reg[i] <= 0;
+            pipeline[i] <= 0;
+        end
+        accumulator <= 0;
+        data_out <= 0;
+    end else begin
+        // Shift the samples through the delay line
+        shift_reg[0] <= data_in;
+        for (i = 1; i < COEFFICIENTS_WIDTH; i = i + 1) begin
+            shift_reg[i] <= shift_reg[i - 1];
+        end
+        
+        // Multiplication of input samples by coefficients with pipelining
+        for (i = 0; i < COEFFICIENTS_WIDTH; i = i + 1) begin
+            pipeline[i] <= shift_reg[i] * COEFFICIENTS[i];
+        end
+        
+        // Accumulate the multiplication results
+        accumulator <= 0; // Reset the accumulator at each clock cycle
+        for (i = 0; i < COEFFICIENTS_WIDTH; i = i + 1) begin
+            accumulator <= accumulator + pipeline[i];
+        end
+        
+        // Output the final accumulated value with proper bit truncation to match output bit width
+        data_out <= accumulator[2*INTEGER_BIT_WIDTH+2*DECIMAL_BIT_WIDTH-2:DECIMAL_BIT_WIDTH];
+    end
+end
+
+endmodule
