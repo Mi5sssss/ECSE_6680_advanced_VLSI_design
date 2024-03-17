@@ -1,1 +1,1 @@
-![][./project0/fig/amplitude_response.jpg]
+![][ECSE_6680_advanced_VLSI_design/project0/fig/amplitude_response.jpg]
