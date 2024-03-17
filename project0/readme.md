@@ -1,1 +1,1 @@
-![][./fig/amplitude_response.jpg]
+![Amplitude response][./fig/amplitude_response.jpg]
