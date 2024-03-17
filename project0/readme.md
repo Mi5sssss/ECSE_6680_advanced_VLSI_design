@@ -1,0 +1,1 @@
+![][./project0/fig/amplitude_response.jpg]

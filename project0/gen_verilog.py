@@ -1,8 +1,6 @@
 # Direct Form FIR Filter
-# Define the path to your coefficients file
-coefficients_path = "coefficients.txt"  # Update this path as necessary
+coefficients_path = "coefficients.txt" 
 
-# Read and process the coefficients from the file
 with open(coefficients_path, "r") as file:
     coefficients = [float(line.strip()) for line in file]
 
@@ -16,7 +14,6 @@ for coeff in coefficients:
         formatted_coeff = "-16'sd{}".format(abs(fixed_point_value))
     formatted_coeffs.append(formatted_coeff)
 
-# Begin constructing the Verilog module
 verilog_code = """
 module fir_filter (
     input wire clk,                 // Clock signal
@@ -29,11 +26,9 @@ module fir_filter (
 localparam TAPS = {0};
 """.format(len(formatted_coeffs))
 
-# Add declarations for each coefficient
 for i, coeff in enumerate(formatted_coeffs):
     verilog_code += "localparam signed [15:0] COEFF_{0} = {1};\n".format(i, coeff)
 
-# Continue with the module logic and correct the multiply-accumulate loop
 verilog_code += """
 // Shift register for input samples
 reg signed [15:0] shift_reg[TAPS-1:0];
@@ -60,7 +55,6 @@ always @(posedge clk) begin
         temp_data_out = 0;
 """
 
-# Correctly format the dynamic part for coefficient indexing within the multiply-accumulate operation
 for i in range(len(formatted_coeffs)):
     verilog_code += "        temp_data_out = temp_data_out + shift_reg[{0}] * COEFF_{0};\n".format(i)
 
@@ -73,7 +67,6 @@ end
 endmodule
 """
 
-# Optionally, write the generated Verilog code to a file
 with open("fir_filter.v", "w") as file:
     file.write(verilog_code)
 
