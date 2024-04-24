@@ -4,6 +4,53 @@
 
 The system is designed to compress data efficiently like ZSTD, utilizing various modules each tailored for specific tasks within the data compression pipeline. 
 
+## Understanding Finite State Entropy (FSE) Encoding
+
+### What is Finite State Entropy?
+
+Finite State Entropy (FSE) is an advanced form of entropy coding used in data compression that surpasses traditional methods like Huffman coding in terms of efficiency and compression ratios. FSE utilizes a table-driven approach to dynamically adjust the probabilities of symbols based on their occurrence and context, which leads to more efficient compression of data with varying statistical properties.
+
+### How Does FSE Work?
+
+FSE operates on the principle of transforming the input data into a series of states using a set of encoding tables derived from the symbol probabilities of the input data. The process is detailed as follows:
+
+#### 1. **Probability Modeling**
+
+- FSE first analyzes the input data to determine the frequency of each symbol.
+- Based on these frequencies, a probability model is created which assigns each symbol a probability and a corresponding coding range.
+
+#### 2. **Table Generation**
+
+- Using the probability model, FSE generates two primary tables:
+  - **State transition table**: Dictates how the current state changes after encoding a symbol.
+  - **Symbol transformation table**: Maps each symbol to a new state and a part of the output bitstream.
+  
+#### 3. **Encoding Process**
+
+- The encoding process starts with an initial state.
+- For each symbol in the input:
+  - The symbol is used to look up in the symbol transformation table, which provides a new state and the bits to be written to the output.
+  - These bits are output in reverse order, starting from the least significant bit.
+  - The state transition table is then consulted with the current state and the symbol to determine the next state.
+  
+#### 4. **Normalization**
+
+- During encoding, if the state reaches a boundary that cannot represent the next symbol, a normalization process occurs:
+  - Bits are output to the bitstream to make room for more symbols.
+  - This ensures that the encoder and decoder stay synchronized.
+
+#### 5. **Termination**
+
+- Once all input symbols are processed, the final state represents the last part of the encoded data.
+- The final bits derived from the last state are written to the output to complete the encoding process.
+
+### Benefits of Using FSE
+
+- **Efficiency**: FSE adapts to the symbol distribution dynamically, providing better compression ratios than static methods.
+- **Speed**: Despite its complexity, modern implementations of FSE are designed to be extremely fast, making it suitable for real-time applications.
+- **Versatility**: It can be used across various data types and applications, from text compression to multimedia encoding.
+
+
 ## Module Descriptions
 
 ### **Arithmetic Package (`arithmetic_pkg.vhd`)**
@@ -50,11 +97,11 @@ The system is designed to compress data efficiently like ZSTD, utilizing various
 
 ## System Integration
 
-These modules are carefully designed to ensure seamless integration:
+These modules are carefully designed to ensure integration:
 - The `fse_encoder` serves as the primary encoding hub, utilizing tools and tables from other packages to encode data.
 - The `bitstream_2to1_merger` is strategically utilized to progressively merge different stages of the bitstream.
 - The `fse2single_bitstream` module finalizes the output by converting the multi-part streams into a single, manageable stream.
 
 ## Conclusion
 
-This FSE encoder design emphasizes modularity and efficiency, with each component crafted to perform its role effectively while integrating smoothly with others. This structure ensures that the system is not only powerful in terms of performance but also flexible and easy to maintain, suitable for a variety of data compression needs.
+Finite State Entropy represents a significant advancement in the field of data compression, offering superior performance and efficiency. Its ability to adapt to different data patterns dynamically makes it a powerful tool for modern compression needs, balancing complexity with performance to achieve optimal results.
